@@ -21,8 +21,7 @@ struct UUID_v7 uuid_v7() {
   struct timeval ts;
   gettimeofday(&ts, NULL);
   uint64_t epoch = 1000 * ts.tv_sec + ts.tv_usec / 1000;
-  uuid.high =
-      (uuid.high & 0x000000000000FFFF) | ((epoch << 16) & 0xFFFFFFFFFFFF0000);
+  uuid.high = (uuid.high & 0xFFFF) | ((epoch << 16) & 0xFFFFFFFFFFFF0000);
 
   uuid.high = (uuid.high & 0xFFFFFFFFFFFF0FFF) | (0b0111 << 12);
   uuid.low = (uuid.low >> 2) | ((uint64_t)1 << 63);
@@ -33,5 +32,5 @@ struct UUID_v7 uuid_v7() {
 void uuid_to_string(uint64_t high, uint64_t low, char *str) {
   snprintf(str, 37, "%08x-%04x-%04x-%04x-%012llx", (uint32_t)(high >> 32),
            (uint16_t)(high >> 16) & 0xFFFF, (uint16_t)(high & 0xFFFF),
-           (int)(low >> 48), (uint64_t)(low & 0xFFFFFFFFFFFF));
+           (uint16_t)(low >> 48), (uint64_t)(low & 0xFFFFFFFFFFFF));
 }
