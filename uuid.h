@@ -2,18 +2,11 @@
 
 #include <cstdint>
 
-struct UUID_v4 {
-  uint64_t high;
-  uint64_t low;
+struct UUID {
+  uint8_t bytes[16];
 };
 
-struct UUID_v4 uuid_v4();
+struct UUID uuid_v4();
+struct UUID uuid_v7();
 
-struct UUID_v7 {
-  uint64_t high;
-  uint64_t low;
-};
-
-struct UUID_v7 uuid_v7();
-
-void uuid_to_string(uint64_t high, uint64_t low, char *str);
+void uuid_to_string(const struct UUID *uuid, char *out);

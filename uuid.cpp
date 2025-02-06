@@ -4,33 +4,41 @@
 #include <cstdlib>
 #include <sys/time.h>
 
-UUID_v4 uuid_v4() {
-  UUID_v4 uuid = {0, 0};
-  arc4random_buf(&uuid, sizeof(uuid));
+UUID uuid_v4() {
+  UUID uuid;
+  arc4random_buf(&uuid.bytes, sizeof(uuid));
 
-  uuid.high = (uuid.high & 0xFFFFFFFFFFFF0FFF) | (1 << 14);
-  uuid.low = (uuid.low >> 2) | ((uint64_t)1 << 63);
+  uuid.bytes[6] = (uuid.bytes[6] & 0x0F) | 0x40;
+  uuid.bytes[8] = (uuid.bytes[6] & 0x3F) | 0x80;
 
   return uuid;
 }
 
-struct UUID_v7 uuid_v7() {
-  UUID_v7 uuid = {0, 0};
-  arc4random_buf(&uuid, sizeof(uuid));
+UUID uuid_v7() {
+  UUID uuid;
+  arc4random_buf(&uuid.bytes, sizeof(uuid));
 
   struct timeval ts;
   gettimeofday(&ts, NULL);
   uint64_t epoch = 1000 * ts.tv_sec + ts.tv_usec / 1000;
-  uuid.high = (uuid.high & 0xFFFF) | ((epoch << 16) & 0xFFFFFFFFFFFF0000);
+  epoch &= 0xFFFFFFFFFFFF;
 
-  uuid.high = (uuid.high & 0xFFFFFFFFFFFF0FFF) | (0b0111 << 12);
-  uuid.low = (uuid.low >> 2) | ((uint64_t)1 << 63);
+  for (int i = 0; i <= 5; i++) {
+    uuid.bytes[i] = (epoch >> 8 * (5 - i)) & 0xFF;
+  }
+
+  uuid.bytes[6] = (uuid.bytes[6] & 0x0F) | 0x70;
+  uuid.bytes[8] = (uuid.bytes[6] & 0x3F) | 0x80;
 
   return uuid;
 }
 
-void uuid_to_string(uint64_t high, uint64_t low, char *str) {
-  snprintf(str, 37, "%08x-%04x-%04x-%04x-%012llx", (uint32_t)(high >> 32),
-           (uint16_t)(high >> 16) & 0xFFFF, (uint16_t)(high & 0xFFFF),
-           (uint16_t)(low >> 48), (uint64_t)(low & 0xFFFFFFFFFFFF));
+void uuid_to_string(const struct UUID *uuid, char *out) {
+  snprintf(
+      out, 37,
+      "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+      uuid->bytes[0], uuid->bytes[1], uuid->bytes[2], uuid->bytes[3],
+      uuid->bytes[4], uuid->bytes[5], uuid->bytes[6], uuid->bytes[7],
+      uuid->bytes[8], uuid->bytes[9], uuid->bytes[10], uuid->bytes[11],
+      uuid->bytes[12], uuid->bytes[13], uuid->bytes[14], uuid->bytes[15]);
 }
